@@ -3,17 +3,17 @@ Gadgets to add backgrounds to your photography
 
 ## Type 1: dominant_color
 
-![image](example\1.jpg)
-![image](example\11.jpg)
-## Type 2: circle
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/1.jpg)
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/11.jpg)
+## Type 2: dominant_color circle
 
-![image](example\2.jpg)
-![image](example\22.jpg)
-## Type 3: blured
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/2.jpg)
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/22.jpg)
+## Type 3: blurred
 
-![image](example\3.jpg)
-![image](example\33.jpg)
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/3.jpg)
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/33.jpg)
 ## Type 3: wite
 
-![image](example\4.jpg)
-![image](example\44.jpg)
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/4.jpg)
+![image](https://github.com/waterkingest/Photo_background/blob/main/example/44.jpg)
