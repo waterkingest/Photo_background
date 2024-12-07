@@ -13,7 +13,7 @@ Gadgets to add backgrounds to your photography
 
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/3.jpg)
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/33.jpg)
-## Type 3: wite
+## Type 4: wite
 
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/4.jpg)
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/44.jpg)
