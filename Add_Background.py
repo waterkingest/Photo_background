@@ -64,8 +64,7 @@ def add_watermark(image,watermark_path,new_width,new_height):
     watermark_position = (watermark_x, watermark_y)
     image.paste(watermark, watermark_position,watermark if watermark.mode == 'RGBA' else None)
     return image
-def add_border(image_path, output_path,watermark_path='',background_kind=''):
-    global new_width,new_height
+def add_border(image_path, output_path,watermark_path='',background_kind='',new_width=6000,new_height=6000):
     image = Image.open(image_path)
     width, height = image.size
     
@@ -86,7 +85,7 @@ def add_border(image_path, output_path,watermark_path='',background_kind=''):
     if watermark_path:
         new_image=add_watermark(new_image,watermark_path,new_width,new_height)
     new_image.save(output_path,dpi=(240,240), lossless=True)
-def process_images(input_folder, output_folder,watermark_path='',background='4'):
+def process_images(input_folder, output_folder,watermark_path='',background='4',new_width=6000,new_height=6000,root=None,process_bar=None):
     '''
     :param input_folder: 输入文件夹路径
     :param output_folder: 输出文件夹路径
@@ -101,11 +100,14 @@ def process_images(input_folder, output_folder,watermark_path='',background='4')
     star_time=time.time()
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    for filename in os.listdir(input_folder):
+    for i, filename in enumerate(os.listdir(input_folder)):
         if filename.endswith((".jpg", ".jpeg", ".png")):
             input_path = os.path.join(input_folder, filename)
             output_path = os.path.join(output_folder, filename)
-            add_border(input_path, output_path,watermark_path=watermark_path,background_kind=background_kind[background])
+            add_border(input_path, output_path,watermark_path=watermark_path,background_kind=background_kind[background],new_width=new_width,new_height=new_height)
+            if root and process_bar:
+                process_bar['value']=(i + 1) * 100 // len([f for f in os.listdir(input_folder) if f.endswith((".jpg", ".jpeg", ".png"))])
+                root.update_idletasks()
     end_time=time.time()
     print(f"time cost:{end_time-star_time}")
     print('finished')
@@ -120,4 +122,5 @@ if __name__ == "__main__":
     new_width = 6000#width+200#5800
 #Define the new height of the image
     new_height = 6000#height+200#5800
-    process_images(input_folder, output_folder,background="2",watermark_path='')
+    background_type=input('Choose the background type:\n1:dominant_color\n2:dominant_color_circle\n3:blured\n4:white\n')
+    process_images(input_folder, output_folder,background=background_type,watermark_path=watermark_path,new_width=new_width,new_height=new_height)
