@@ -28,7 +28,7 @@ This project is a python implementation of a photo background adding tool. It us
 
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/3.jpg)
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/33.jpg)
-## Type 4: wite
+## Type 4: white
 
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/4.jpg)
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/44.jpg)
