@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 from collections import Counter
 import numpy as np
 import time
+import math
 os.environ['OMP_NUM_THREADS'] = '10'
 def get_dominant_color(image):
     small_image = image.resize((50, 50))
@@ -95,12 +96,13 @@ def get_img_exif(image):
 def add_Parameter(image):
     parameter_dict=get_img_exif(image)
     width, height = image.size
+    self_adative_roit=math.ceil(width*height/(3000*6000)*0.4)
     watermark = Image.new('RGB', (width, int(height*0.1)), color=(255, 255, 255))
     watermark_width, watermark_height = watermark.size
     draw = ImageDraw.Draw(watermark)
 
-    Boldfont = ImageFont.truetype("fonts\Roboto-Bold.ttf", 100)
-    Lightfont = ImageFont.truetype("fonts\Roboto-Light.ttf", 80)
+    Boldfont = ImageFont.truetype("fonts\Roboto-Bold.ttf", int(100*self_adative_roit))
+    Lightfont = ImageFont.truetype("fonts\Roboto-Light.ttf", int(80*self_adative_roit))
     #lens
     text = parameter_dict["LensModel"]
     text_position = (int(watermark_height*0.2), int(watermark_height*0.2))
@@ -108,7 +110,7 @@ def add_Parameter(image):
     
     #Camera
     text = parameter_dict["Model"]
-    text_position = (int(watermark_height*0.2), int(height*0.1)//2) 
+    text_position = (int(watermark_height*0.2), int(height*0.1)//2+int(10*self_adative_roit)) 
     draw.text(text_position, text, font=Lightfont, fill='gray')
     
     #Parameter
@@ -124,18 +126,18 @@ def add_Parameter(image):
     #Time
     date=datetime.strptime(parameter_dict['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
     date=date.strftime( '%Y-%m-%d %H:%M')
-    text_position = (watermark_width - text_width - int(watermark_height*0.2), int(height*0.1)//2)  # 在图像顶部居中
+    text_position = (watermark_width - text_width - int(watermark_height*0.2), int(height*0.1)//2+int(10*self_adative_roit))  # 在图像顶部居中
     draw.text(text_position, date, font=Lightfont, fill='gray')
     
     # Gray line
-    draw.line([(watermark_width - text_width - 50 -int(watermark_height*0.2), 50), (width - text_width - 50-int(watermark_height*0.2), int(height*0.1)-50)], fill=(128, 128, 128), width=10)
+    draw.line([(watermark_width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(50*self_adative_roit)), (width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(height*0.1)-int(50*self_adative_roit))], fill=(128, 128, 128), width=10)
       
     # logo
     brand=parameter_dict['Make']
     logo_height=int(height*0.1*0.7)
     logo=get_logo(brand)
     logo=resize_image_with_height(logo,logo_height)
-    logo_position = (watermark_width - text_width - 70-logo.size[0]-int(watermark_height*0.2), int((watermark_height-logo.size[1])//2))  # 在图像顶部居中
+    logo_position = (watermark_width - text_width - int(70*self_adative_roit) -logo.size[0]-int(watermark_height*0.2), int((watermark_height-logo.size[1])//2))  # 在图像顶部居中
     watermark.paste(logo, logo_position)
     
     new_img=Image.new('RGB', (width, int(height*1.1)), color=(255, 255, 255))
