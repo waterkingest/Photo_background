@@ -1,4 +1,6 @@
-from PIL import Image, ImageFilter, ImageDraw
+from PIL import Image, ImageFilter, ImageDraw,ExifTags,ImageFont
+from fractions import Fraction
+from datetime import datetime
 import os
 from sklearn.cluster import KMeans
 from collections import Counter
@@ -64,6 +66,99 @@ def add_watermark(image,watermark_path,new_width,new_height):
     watermark_position = (watermark_x, watermark_y)
     image.paste(watermark, watermark_position,watermark if watermark.mode == 'RGBA' else None)
     return image
+def get_img_xmp(image):
+    img_xmp = image.getxmp()
+    # print(img_xmp)
+    paremeterdic={}
+    xmp_data=img_xmp['xmpmeta']['RDF']['Description']
+    paremeterdic['LensModel']=xmp_data['LensModel']
+    paremeterdic['Model']=xmp_data['Model']
+    paremeterdic['FocalLength']=xmp_data['FocalLengthIn35mmFilm']
+    paremeterdic['FNumber']=float(Fraction(xmp_data['FNumber']))
+    paremeterdic['ExposureTime']=float(Fraction(xmp_data['ExposureTime']))
+    paremeterdic['ISOSpeedRatings']=int(xmp_data['ISOSpeedRatings']['Seq']['li'])
+    paremeterdic['Make']=xmp_data['Make']
+    date_str=xmp_data['DateTimeOriginal']
+    date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+    paremeterdic['DateTimeOriginal']=date_obj.strftime('%Y:%m:%d %H:%M:%S')
+    return paremeterdic
+def get_img_exif(image):
+    img_exif = image._getexif()
+    if not img_exif:
+        result_dict=get_img_xmp(image)
+        return result_dict
+    result_dict={}
+    for key, val in img_exif.items():
+        if key in ExifTags.TAGS:
+            result_dict[ExifTags.TAGS[key]]=val
+    return result_dict
+def add_Parameter(image):
+    parameter_dict=get_img_exif(image)
+    width, height = image.size
+    watermark = Image.new('RGB', (width, int(height*0.1)), color=(255, 255, 255))
+    watermark_width, watermark_height = watermark.size
+    draw = ImageDraw.Draw(watermark)
+
+    Boldfont = ImageFont.truetype("fonts\Roboto-Bold.ttf", 100)
+    Lightfont = ImageFont.truetype("fonts\Roboto-Light.ttf", 80)
+    #lens
+    text = parameter_dict["LensModel"]
+    text_position = (int(watermark_height*0.2), int(watermark_height*0.2))
+    draw.text(text_position, text, font=Boldfont, fill='black')
+    
+    #Camera
+    text = parameter_dict["Model"]
+    text_position = (int(watermark_height*0.2), int(height*0.1)//2) 
+    draw.text(text_position, text, font=Lightfont, fill='gray')
+    
+    #Parameter
+    focal_length=parameter_dict['FocalLength']
+    f_number=parameter_dict['FNumber']
+    exposure_time = Fraction(parameter_dict['ExposureTime']).limit_denominator()
+    iso=parameter_dict['ISOSpeedRatings']
+    para='  '.join([str(focal_length) + 'mm', 'f/' + str(f_number), str(exposure_time)+'s','ISO' + str(iso)])
+    _, _, text_width, text_height = Boldfont.getbbox(para)
+    text_position = (watermark_width - text_width - int(watermark_height*0.2), int(watermark_height*0.2)) 
+    draw.text(text_position, para, font=Boldfont, fill='black') 
+    
+    #Time
+    date=datetime.strptime(parameter_dict['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
+    date=date.strftime( '%Y-%m-%d %H:%M')
+    text_position = (watermark_width - text_width - int(watermark_height*0.2), int(height*0.1)//2)  # 在图像顶部居中
+    draw.text(text_position, date, font=Lightfont, fill='gray')
+    
+    # Gray line
+    draw.line([(watermark_width - text_width - 50 -int(watermark_height*0.2), 50), (width - text_width - 50-int(watermark_height*0.2), int(height*0.1)-50)], fill=(128, 128, 128), width=10)
+      
+    # logo
+    brand=parameter_dict['Make']
+    logo_height=int(height*0.1*0.7)
+    logo=get_logo(brand)
+    logo=resize_image_with_height(logo,logo_height)
+    logo_position = (watermark_width - text_width - 70-logo.size[0]-int(watermark_height*0.2), int((watermark_height-logo.size[1])//2))  # 在图像顶部居中
+    watermark.paste(logo, logo_position)
+    
+    new_img=Image.new('RGB', (width, int(height*1.1)), color=(255, 255, 255))
+    new_img.paste(image, (0, 0))
+    new_img.paste(watermark, (0, height))
+    temp_width,temp_height=new_img.size
+    new_background=Image.new('RGB', (int(temp_width*1.05), int(temp_height*1.025)), color=(255, 255, 255))
+    new_background.paste(new_img, (int(temp_width*0.025), int(temp_height*0.025)))
+    return new_background
+def resize_image_with_height(image, height):
+    width, old_height = image.size
+
+    scale = height / old_height
+    new_width = round(width * scale)
+
+    resized_image = image.resize((new_width, height), Image.LANCZOS)
+    image.close()
+
+    return resized_image
+def get_logo(brand):
+    file='logos\\'+brand.lower()+'.png'
+    logo=Image.open(file)
+    return logo
 def add_border(image_path, output_path,watermark_path='',background_kind='',new_width=6000,new_height=6000):
     image = Image.open(image_path)
     width, height = image.size
@@ -74,14 +169,16 @@ def add_border(image_path, output_path,watermark_path='',background_kind='',new_
         new_image=add_dominant_color_circle(image,width,height,new_width,new_height)
     elif background_kind=='blured':
         new_image=add_blured_background(image,width,height)
+        temp_width,temp_height = new_image.size
+        left = (temp_width - new_width) // 2
+        top = (temp_height - new_height) // 2
+        right = left + new_width
+        bottom = top + new_height
+        new_image = new_image.crop((left, top, right, bottom))
     elif background_kind=='white':
         new_image=add_wite_border(image,width,height,new_width,new_height)
-    temp_width,temp_height = new_image.size
-    left = (temp_width - new_width) // 2
-    top = (temp_height - new_height) // 2
-    right = left + new_width
-    bottom = top + new_height
-    new_image = new_image.crop((left, top, right, bottom))
+    elif background_kind=='parameter':
+        new_image=add_Parameter(image)
     if watermark_path:
         new_image=add_watermark(new_image,watermark_path,new_width,new_height)
     new_image.save(output_path,dpi=(240,240), lossless=True)
@@ -96,7 +193,8 @@ def process_images(input_folder, output_folder,watermark_path='',background='4',
     background_kind={'1':'dominant_color',
                      '2':'dominant_color_circle',
                      '3':'blured',
-                     '4':'white'}
+                     '4':'white',
+                     '5':'parameter'}
     star_time=time.time()
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)

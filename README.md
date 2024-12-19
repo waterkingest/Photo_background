@@ -17,3 +17,8 @@ Gadgets to add backgrounds to your photography
 
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/4.jpg)
 ![image](https://github.com/waterkingest/Photo_background/blob/main/example/44.jpg)
+
+## Type 5: Parameter
+
+![image](https://github.com/AtomChen0425/picx-images-hosting/raw/master/Project/5.5xap1ovzb4.webp)
+![image](https://github.com/AtomChen0425/picx-images-hosting/raw/master/Project/55.ic6j9gtx0.webp)

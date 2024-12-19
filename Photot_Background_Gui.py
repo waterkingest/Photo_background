@@ -94,13 +94,13 @@ background_label = tk.Label(root, text="Background Type:")
 background_label.pack()
 background_var = tk.StringVar()
 background_var.set("1")
-background_option_menu = tk.OptionMenu(root, background_var, "1", "2", "3", "4")
+background_option_menu = tk.OptionMenu(root, background_var, "1", "2", "3", "4","5")
 background_option_menu.pack()
 
 
 log_text = tk.Text(root, height=10, width=50)
 log_text.pack()
-log_text.insert(tk.END, "Background Type:\n1.dominant_color\n2.dominant_color_circle\n3.blured\n4.white\n")
+log_text.insert(tk.END, "Background Type:\n1.dominant_color\n2.dominant_color_circle\n3.blured\n4.white\n5.parameter\n")
 
 progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
 progress_bar.pack()

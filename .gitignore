@@ -3,3 +3,5 @@ Photot_Background_Gui.spec
 build/Photot_Background_Gui/base_library.zip
 /build
 /dist
+/input
+/output
