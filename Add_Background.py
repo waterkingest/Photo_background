@@ -68,13 +68,13 @@ def add_blured_background(image,width,height, corner_radius=120, shadow_offset=(
     shadow_draw.rounded_rectangle(
         [(shadow_blur, shadow_blur), (image.width, image.height)],
         corner_radius,
-        fill=(0, 0, 0, 255)
+        fill=(0, 0, 0, 180)
     )
     shadow = shadow.filter(ImageFilter.GaussianBlur(shadow_blur))
 
 
     offset = ((temp_width - width) // 2, (temp_height - height) // 2)
-    new_image.paste(shadow, (offset[0] - shadow_offset[0] // 2, offset[1] - shadow_offset[1] // 2), shadow)
+    new_image.paste(shadow, (offset[0] + shadow_offset[0] // 2, offset[1] + shadow_offset[1] // 2), shadow)
     new_image.paste(rounded_image, offset, rounded_image)
     return new_image
 def add_dominant_color_background(image,width,height,new_width,new_height):
