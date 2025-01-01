@@ -1,6 +1,8 @@
-from PIL import Image, ImageFilter, ImageDraw,ExifTags,ImageFont
+from PIL import Image, ImageFilter, ImageDraw,ExifTags,ImageFont, ImageOps
+from collections import defaultdict
 from fractions import Fraction
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+import re
 import os
 from sklearn.cluster import KMeans
 from collections import Counter
@@ -8,6 +10,25 @@ import numpy as np
 import time
 import math
 os.environ['OMP_NUM_THREADS'] = '10'
+def parse_iso8601(date_str):
+    try:
+        return datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
+    except ValueError:
+        pass
+    iso_regex = re.compile(r'(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d+)?(Z|[+-]\d{2}:\d{2})?$')
+    match = iso_regex.match(date_str)
+    
+    if match:
+        year, month, day, hour, minute, second, fraction, tz_info = match.groups()
+        fraction = fraction or '0'
+        fraction = int(fraction)
+        new_date_str = f"{year}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{fraction:03}"
+        if tz_info:
+            new_date_str += tz_info
+        
+        return datetime.fromisoformat(new_date_str).replace(tzinfo=timezone.utc if tz_info is None else None)
+    
+    raise ValueError("Invalid ISO 8601 format")
 def get_dominant_color(image):
     small_image = image.resize((50, 50))
     pixels = small_image.getdata()
@@ -28,12 +49,33 @@ def add_wite_border(image,width,height,new_width,new_height):
     offset = ((new_width - width) // 2, (new_height - height) // 2)
     new_image.paste(image, offset)
     return new_image
-def add_blured_background(image,width,height):
+def add_blured_background(image,width,height, corner_radius=120, shadow_offset=(60, 60), shadow_blur=15):
+
     blurred_image = image.filter(ImageFilter.GaussianBlur(40))
-    new_image=blurred_image.resize((int(width*2), int(height*2)))
-    temp_width,temp_height = new_image.size
+    new_image = blurred_image.resize((int(width * 2), int(height * 2)))
+    temp_width, temp_height = new_image.size
+
+    mask = Image.new("L", image.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle(
+        [(0, 0), image.size], corner_radius, fill=255
+    )
+    rounded_image = ImageOps.fit(image, image.size, centering=(0.5, 0.5))
+    rounded_image.putalpha(mask)
+
+    shadow = Image.new("RGBA", (image.width + shadow_offset[0], image.height + shadow_offset[1]), (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    shadow_draw.rounded_rectangle(
+        [(shadow_blur, shadow_blur), (image.width, image.height)],
+        corner_radius,
+        fill=(0, 0, 0, 255)
+    )
+    shadow = shadow.filter(ImageFilter.GaussianBlur(shadow_blur))
+
+
     offset = ((temp_width - width) // 2, (temp_height - height) // 2)
-    new_image.paste(image, offset)
+    new_image.paste(shadow, (offset[0] - shadow_offset[0] // 2, offset[1] - shadow_offset[1] // 2), shadow)
+    new_image.paste(rounded_image, offset, rounded_image)
     return new_image
 def add_dominant_color_background(image,width,height,new_width,new_height):
     dominant_color = get_dominant_color(image)
@@ -74,13 +116,16 @@ def get_img_xmp(image):
     xmp_data=img_xmp['xmpmeta']['RDF']['Description']
     paremeterdic['LensModel']=xmp_data['LensModel']
     paremeterdic['Model']=xmp_data['Model']
-    paremeterdic['FocalLength']=xmp_data['FocalLengthIn35mmFilm']
+    paremeterdic['FocalLength']=float(Fraction(xmp_data['FocalLength']))
     paremeterdic['FNumber']=float(Fraction(xmp_data['FNumber']))
     paremeterdic['ExposureTime']=float(Fraction(xmp_data['ExposureTime']))
     paremeterdic['ISOSpeedRatings']=int(xmp_data['ISOSpeedRatings']['Seq']['li'])
     paremeterdic['Make']=xmp_data['Make']
     date_str=xmp_data['DateTimeOriginal']
-    date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+    # try:
+    #     date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+    # except:
+    date_obj = parse_iso8601(date_str)
     paremeterdic['DateTimeOriginal']=date_obj.strftime('%Y:%m:%d %H:%M:%S')
     return paremeterdic
 def get_img_exif(image):
@@ -88,7 +133,7 @@ def get_img_exif(image):
     if not img_exif:
         result_dict=get_img_xmp(image)
         return result_dict
-    result_dict={}
+    result_dict=defaultdict(str)
     for key, val in img_exif.items():
         if key in ExifTags.TAGS:
             result_dict[ExifTags.TAGS[key]]=val
@@ -116,7 +161,7 @@ def add_Parameter(image):
     #Parameter
     focal_length=parameter_dict['FocalLength']
     f_number=parameter_dict['FNumber']
-    exposure_time = Fraction(parameter_dict['ExposureTime']).limit_denominator()
+    exposure_time = Fraction(parameter_dict['ExposureTime']).limit_denominator() if parameter_dict['ExposureTime'] else 'NA'
     iso=parameter_dict['ISOSpeedRatings']
     para='  '.join([str(focal_length) + 'mm', 'f/' + str(f_number), str(exposure_time)+'s','ISO' + str(iso)])
     _, _, text_width, text_height = Boldfont.getbbox(para)
@@ -158,7 +203,7 @@ def resize_image_with_height(image, height):
 
     return resized_image
 def get_logo(brand):
-    file='logos\\'+brand.lower()+'.png'
+    file='logos\\'+brand.lower().split(' ')[0]+'.png'
     logo=Image.open(file)
     return logo
 def add_border(image_path, output_path,watermark_path='',background_kind='',new_width=6000,new_height=6000):

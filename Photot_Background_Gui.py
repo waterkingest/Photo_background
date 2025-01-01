@@ -79,14 +79,14 @@ watermark_button.pack()
 width_label = tk.Label(root, text="New Width:")
 width_label.pack()
 width_entry = tk.Entry(root, width=50)
-width_entry.insert(0, "6000") 
+width_entry.insert(0, "7000") 
 width_entry.pack()
 
 
 height_label = tk.Label(root, text="New Height:")
 height_label.pack()
 height_entry = tk.Entry(root, width=50)
-height_entry.insert(0, "6000") 
+height_entry.insert(0, "7000") 
 height_entry.pack()
 
 
