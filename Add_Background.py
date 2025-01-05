@@ -141,8 +141,9 @@ def get_img_exif(image):
 def add_Parameter(image):
     parameter_dict=get_img_exif(image)
     width, height = image.size
+    lowest_len=min(width,height)
     self_adative_roit=math.ceil(width*height/(3000*6000)*0.4)
-    watermark = Image.new('RGB', (width, int(height*0.1)), color=(255, 255, 255))
+    watermark = Image.new('RGB', (width, int(lowest_len*0.1)), color=(255, 255, 255))
     watermark_width, watermark_height = watermark.size
     draw = ImageDraw.Draw(watermark)
 
@@ -155,7 +156,7 @@ def add_Parameter(image):
     
     #Camera
     text = parameter_dict["Model"]
-    text_position = (int(watermark_height*0.2), int(height*0.1)//2+int(10*self_adative_roit)) 
+    text_position = (int(watermark_height*0.2), int(watermark_height)//2+int(10*self_adative_roit)) 
     draw.text(text_position, text, font=Lightfont, fill='gray')
     
     #Parameter
@@ -171,21 +172,21 @@ def add_Parameter(image):
     #Time
     date=datetime.strptime(parameter_dict['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
     date=date.strftime( '%Y-%m-%d %H:%M')
-    text_position = (watermark_width - text_width - int(watermark_height*0.2), int(height*0.1)//2+int(10*self_adative_roit))  # 在图像顶部居中
+    text_position = (watermark_width - text_width - int(watermark_height*0.2), int(watermark_height)//2+int(10*self_adative_roit))  # 在图像顶部居中
     draw.text(text_position, date, font=Lightfont, fill='gray')
     
     # Gray line
-    draw.line([(watermark_width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(50*self_adative_roit)), (width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(height*0.1)-int(50*self_adative_roit))], fill=(128, 128, 128), width=10)
+    draw.line([(watermark_width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(50*self_adative_roit)), (width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(watermark_height)-int(50*self_adative_roit))], fill=(128, 128, 128), width=10)
       
     # logo
     brand=parameter_dict['Make']
-    logo_height=int(height*0.1*0.7)
+    logo_height=int(watermark_height*0.7)
     logo=get_logo(brand)
     logo=resize_image_with_height(logo,logo_height)
     logo_position = (watermark_width - text_width - int(70*self_adative_roit) -logo.size[0]-int(watermark_height*0.2), int((watermark_height-logo.size[1])//2))  # 在图像顶部居中
     watermark.paste(logo, logo_position)
     
-    new_img=Image.new('RGB', (width, int(height*1.1)), color=(255, 255, 255))
+    new_img=Image.new('RGB', (width, int(height+watermark_height)), color=(255, 255, 255))
     new_img.paste(image, (0, 0))
     new_img.paste(watermark, (0, height))
     temp_width,temp_height=new_img.size
