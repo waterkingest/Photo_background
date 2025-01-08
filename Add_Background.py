@@ -177,7 +177,7 @@ def add_Parameter(image):
     draw.text(text_position, date, font=Lightfont, fill='gray')
     
     # Gray line
-    draw.line([(watermark_width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(50*self_adative_roit)), (width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(watermark_height)-int(50*self_adative_roit))], fill=(128, 128, 128), width=10)
+    draw.line([(watermark_width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(50*self_adative_roit)), (width - text_width - int(50*self_adative_roit) -int(watermark_height*0.2), int(watermark_height)-int(50*self_adative_roit))], fill=(128, 128, 128), width=int(10*self_adative_roit))
       
     # logo
     brand=parameter_dict['Make']
