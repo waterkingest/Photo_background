@@ -4,6 +4,8 @@ from tkinter import messagebox
 from Add_Background import *
 from tkinter import ttk
 import time
+import requests
+current_version = "1.3"
 def main_process_images(input_folder, output_folder, background, watermark_path, new_width, new_height):
     log_text.insert(tk.END, f"Input Folder: {input_folder}\n")
     log_text.insert(tk.END, f"Output Folder: {output_folder}\n")
@@ -48,8 +50,33 @@ def submit():
     main_process_images(input_folder, output_folder, background_type, watermark_path, new_width, new_height)
 
 
+
+def get_latest_version():
+    try:
+        response = requests.get("https://api.github.com/repos/waterkingest/Photo_background/releases/latest")
+        response.raise_for_status()
+        release_info = response.json()
+        return release_info['tag_name']
+    except requests.RequestException as e:
+        print(f"Error fetching latest version: {e}")
+        return None
+
+def check_for_updates():
+    latest_version = get_latest_version()
+    if latest_version and latest_version != current_version:
+        return f"New version available: {latest_version}"
+    return False
+
+def show_version_and_update():
+    version_label = tk.Label(root, text=f"Version: {current_version}")
+    version_label.pack()
+    update_message = check_for_updates()
+    if update_message:
+        update_label = tk.Label(root, text=update_message)
+        update_label.pack()
 root = tk.Tk()
 root.title("Image Processing Tool")
+
 
 
 input_folder_label = tk.Label(root, text="Input Folder:")
@@ -108,5 +135,5 @@ progress_bar.pack()
 submit_button = tk.Button(root, text="Submit", command=submit)
 submit_button.pack()
 
-
+show_version_and_update()
 root.mainloop()
