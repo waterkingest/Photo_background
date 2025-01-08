@@ -142,13 +142,14 @@ def add_Parameter(image):
     parameter_dict=get_img_exif(image)
     width, height = image.size
     lowest_len=min(width,height)
-    self_adative_roit=math.ceil(width*height/(3000*6000)*0.4)
+    # self_adative_roit=math.ceil(width*height/(3000*6000)*0.4)
+    self_adative_roit=min(width,height)/3500
     watermark = Image.new('RGB', (width, int(lowest_len*0.1)), color=(255, 255, 255))
     watermark_width, watermark_height = watermark.size
     draw = ImageDraw.Draw(watermark)
 
-    Boldfont = ImageFont.truetype("fonts\Roboto-Bold.ttf", int(100*self_adative_roit))
-    Lightfont = ImageFont.truetype("fonts\Roboto-Light.ttf", int(80*self_adative_roit))
+    Boldfont = ImageFont.truetype("fonts\Roboto-Bold.ttf", int(90*self_adative_roit))
+    Lightfont = ImageFont.truetype("fonts\Roboto-Light.ttf", int(70*self_adative_roit))
     #lens
     text = parameter_dict["LensModel"]
     text_position = (int(watermark_height*0.2), int(watermark_height*0.2))
